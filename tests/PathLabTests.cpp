@@ -9,6 +9,33 @@ int main() {
         std::cerr << "path smoke check failed\n";
         return 1;
     }
-    std::cout << "PathLab smoke check passed\n";
+
+    const std::filesystem::path ordinaryRoot = "repo";
+    const std::filesystem::path nestedRoot =
+        std::filesystem::path("course") / "repo";
+
+    if (minigit::metadataDirectory(ordinaryRoot) !=
+        ordinaryRoot / ".minigit") {
+        std::cerr << "metadata directory path failed for ordinary root\n";
+        return 1;
+    }
+    if (minigit::metadataDirectory(nestedRoot) !=
+        nestedRoot / ".minigit") {
+        std::cerr << "metadata directory path failed for nested root\n";
+        return 1;
+    }
+
+    if (minigit::headFilePath(ordinaryRoot) !=
+        ordinaryRoot / ".minigit" / "HEAD") {
+        std::cerr << "HEAD file path failed for ordinary root\n";
+        return 1;
+    }
+    if (minigit::headFilePath(nestedRoot) !=
+        nestedRoot / ".minigit" / "HEAD") {
+        std::cerr << "HEAD file path failed for nested root\n";
+        return 1;
+    }
+
+    std::cout << "PathLab path checks passed\n";
     return 0;
 }
