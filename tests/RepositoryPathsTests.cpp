@@ -37,6 +37,27 @@ std::cerr << "stageFile filename check failed\n";
 return 1;
     }
 
+const std::filesystem::path commitRoot = root / ".minigit" / "commits" / "3";
+
+if (paths.commitDirectory("3") != commitRoot) {
+std::cerr << "commitDirectory check failed: got "
+<< paths.commitDirectory("3").string() << "\n";
+return 1;
+    }
+
+if (paths.committedFile("3", "docs/notes.txt") !=
+commitRoot / "files" / "docs" / "notes.txt") {
+std::cerr << "committedFile check failed: got "
+<< paths.committedFile("3", "docs/notes.txt").string() << "\n";
+return 1;
+    }
+
+if (paths.committedFile("3", "a.txt").parent_path() !=
+paths.commitDirectory("3") / "files") {
+std::cerr << "committedFile parent check failed\n";
+return 1;
+    }
+
 if (std::filesystem::exists(paths.metadataRoot()) ||
 std::filesystem::exists(stageRoot)) {
 std::cerr << "files were created on disk\n";
