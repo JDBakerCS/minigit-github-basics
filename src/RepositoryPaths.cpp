@@ -1,11 +1,9 @@
 #include "RepositoryPaths.hpp"
 
-#include <utility>
-
 namespace minigit {
 
 RepositoryPaths::RepositoryPaths(std::filesystem::path projectRoot)
-    : projectRoot_(std::move(projectRoot)),
+    : projectRoot_(projectRoot),
       metadataRoot_(projectRoot_ / ".minigit") {}
 
 const std::filesystem::path &RepositoryPaths::projectRoot() const {
