@@ -10,7 +10,10 @@ namespace minigit {
             const std::filesystem::path& projectRoot() const;
             const std::filesystem::path& metadataRoot() const;
             
-            std::filesystem::path stageFile(const std::string& path) const;
+
+            std::filesystem::path commitDirectory(const std::string& id) const;
+            std::filesystem::path committedFile(const std::string& id,
+                                                const std::string& path) const;
         
         private:
             std::filesystem::path projectRoot_;
