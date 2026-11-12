@@ -85,6 +85,7 @@ void testRoots() {
             throw std::runtime_error(
                 "Metadata root check failed.");
         }
+
     }
 }
 
