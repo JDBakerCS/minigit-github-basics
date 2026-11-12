@@ -208,11 +208,85 @@ void testSymbolicLinks() {
     }
 }
 
+void testPathHelpers() {
+    const std::filesystem::path roots[] = {
+        std::filesystem::path("course") / "repo",
+        std::filesystem::path("course") / "team" / "repo"};
+
+        for (const auto &root : roots) {
+            const minigit::RepositoryPaths paths(root);
+
+            if (paths.projectRoot() != root) {
+                throw std::runtime_error("project root check failed.");
+            }
+
+            if (paths.metadataRoot() != root / ".minigit") {
+                throw std::runtime_error("metadata root check failed.");
+            }
+
+            if (paths.headFile() != root / ".minigit" / "HEAD") {
+                throw std::runtime_error("HEAD path check failed.");
+            }
+
+            if (paths.indexFile() != root / ".minigit" / "index.txt") {
+                throw std::runtime_error("index path check failed.");
+            }
+            if (paths.headFile().parent_path() != paths.metadataRoot()) {
+                throw std::runtime_error("HEAD parent check failed.");
+            }
+
+            if (paths.indexFile().filename() != "index.txt") {
+                throw std::runtime_error("index filename check failed.");
+            }
+
+            const std::filesystem::path stageRoot = root / ".minigit" / "stage";
+
+            if (paths.stageFile("notes.txt") != stageRoot / "notes.txt") {
+                throw std::runtime_error("stageFile top-level check failed.");
+            }
+
+            if (paths.stageFile("docs/notes.txt") != stageRoot / "docs" / "notes.txt") {
+                throw std::runtime_error("stageFile sub-folder check failed.");
+            }
+
+            if (paths.stageFile("docs/notes.txt").filename() != "notes.txt") {
+                throw std::runtime_error("stageFile filename check failed.");
+            }
+
+            if (std::filesystem::exists(paths.metadataRoot()) ||
+            std::filesystem::exists(stageRoot)) {
+                throw std::runtime_error("files were created on disk.");
+            }
+
+            const std::filesystem::path commitRoot = root / ".minigit" / "commits" / "3";
+
+            if (paths.commitDirectory("3") != commitRoot) {
+                throw std::runtime_error("commitDirectory check failed.");
+            }
+
+            if (paths.committedFile("3", "docs/notes.txt") !=
+            commitRoot / "files" / "docs" / "notes.txt") {
+                throw std::runtime_error("committedFile check failed.");
+            }
+
+            if (paths.committedFile("3", "a.txt").parent_path() !=
+            paths.commitDirectory("3") / "files") {
+                throw std::runtime_error("committedFile parent check failed.");
+            }
+
+            if (std::filesystem::exists(paths.metadataRoot()) ||
+            std::filesystem::exists(commitRoot)) {
+                throw std::runtime_error("files were created on disk.");
+            }
+        }
+    }
+
 } // namespace
 
 int main() {
     try {
         testRoots();
+        testPathHelpers();
         testRelativePaths();
         testSymbolicLinks();
 
