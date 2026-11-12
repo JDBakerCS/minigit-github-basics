@@ -56,4 +56,23 @@ std::string RepositoryPaths::safeRelativeFile(
     return clean.generic_string();
 }
 
+std::filesystem::path RepositoryPaths::commitDirectory(const std::string &id) const {
+    return metadataRoot_ / "commits" / id;
+}
+
+std::filesystem::path RepositoryPaths::committedFile(const std::string &id,
+    const std::string &path) const {
+    return commitDirectory(id) / "files" / path;
+}
+std::filesystem::path RepositoryPaths::headFile() const {
+    return metadataRoot_ / "HEAD";
+}
+
+std::filesystem::path RepositoryPaths::indexFile() const {
+    return metadataRoot_ / "index.txt";
+}
+std::filesystem::path RepositoryPaths::stageFile(const std::string &path) const {
+    return metadataRoot_ / "stage" / path;
+}
+
 } // namespace minigit
