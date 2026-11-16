@@ -8,6 +8,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 add_library(minigit_paths
     src/PathLab.cpp
     src/RepositoryPaths.cpp
+    src/FileSystem.cpp
 )
 
 target_include_directories(minigit_paths PUBLIC include)
@@ -21,4 +22,8 @@ if(BUILD_TESTING)
     add_executable(repository_paths_tests tests/RepositoryPathsTests.cpp)
     target_link_libraries(repository_paths_tests PRIVATE minigit_paths)
     add_test(NAME repository_paths_tests COMMAND repository_paths_tests)
+
+    add_executable(file_system_tests tests/FileSystemTests.cpp)
+    target_link_libraries(file_system_tests PRIVATE minigit_paths)
+    add_test(NAME file_system_tests COMMAND file_system_tests)
 endif()
