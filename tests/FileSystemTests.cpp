@@ -80,15 +80,15 @@ bool testWriteBytesSafely() {
     bool passed = true;
     try {
         const auto target = temp / "data.bin";
-        // Include a null byte, line endings, and values above 127 to test binary data.
+        // include a null byte, line endings, and values above 127 to test binary data
         const minigit::FileBytes binary = {0, 10, 13, 26, 128, 255};
         fileSystem.writeBytesSafely(target, binary);
-        // Keep an earlier failure in passed, while still running each new check.
+        // keep an earlier failure in passed, while still running each new check
         passed = check(fileSystem.readBytes(target) == binary, "write preserves binary bytes") && passed;
-        // A shorter replacement must remove all bytes from the old version.
+        // A shorter replacement must remove all bytes from the old version
         fileSystem.writeBytesSafely(target, {42});
         passed = check(fileSystem.readBytes(target) == minigit::FileBytes{42}, "shorter replacement has no leftover bytes") && passed;
-        // An empty byte vector should produce an existing file with zero bytes.
+        // An empty byte vector should produce an existing file with zero bytes
         fileSystem.writeBytesSafely(target, {});
         passed = check(fileSystem.readBytes(target).empty(), "empty replacement") && passed;
         passed = check(!std::filesystem::exists(temp / "data.bin.tmp"), "successful writes clean temporary workspace") && passed;
@@ -100,7 +100,7 @@ bool testWriteBytesSafely() {
     return passed;
 }
 
-// Check errors that happen before the original file can be replaced.
+// check errors that happen before the original file can be replaced.
 bool testWriteErrors() {
     const minigit::FileSystem fileSystem;
     const auto temp = std::filesystem::temp_directory_path() /
@@ -115,7 +115,7 @@ bool testWriteErrors() {
         const auto target = temp / "data.bin";
         const minigit::FileBytes binary = {0, 10, 13, 26, 128, 255};
 
-        // Here an exception is expected: the function must not create the parent.
+
         bool threw = false;
         try {
             fileSystem.writeBytesSafely(temp / "missing" / "data.bin", binary);
@@ -125,8 +125,8 @@ bool testWriteErrors() {
         passed = check(threw, "missing parent throws") && passed;
         passed = check(!std::filesystem::exists(temp / "missing"), "missing parent is not created") && passed;
 
-        // Occupy the temporary workspace to simulate failure before replacement.
-        // The function must leave this existing workspace and the original file alone.
+        // occupy the temporary workspace to simulate failure before replacement.
+        // The function must leave this existing workspace and the original file alone
         fileSystem.writeBytesSafely(target, binary);
         std::filesystem::create_directory(temp / "data.bin.tmp");
         threw = false;
@@ -147,7 +147,7 @@ bool testWriteErrors() {
     return passed;
 }
 
-// Check cleanup when temporary bytes are written but replacement cannot finish.
+// check cleanup when temporary bytes are written but replacement cannot finish
 bool testFailedReplacement() {
     const minigit::FileSystem fileSystem;
     const auto temp = std::filesystem::temp_directory_path() /
@@ -161,7 +161,7 @@ bool testFailedReplacement() {
     try {
         const minigit::FileBytes binary = {0, 10, 13, 26, 128, 255};
 
-        // A directory cannot be replaced by a file; staged bytes must be cleaned up.
+        // A directory cannot be replaced by a file; staged bytes must be cleaned up
         const auto folder = temp / "folder";
         std::filesystem::create_directory(folder);
         fileSystem.writeBytesSafely(folder / "keep.bin", binary);
