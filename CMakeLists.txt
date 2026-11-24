@@ -36,8 +36,13 @@ if(BUILD_TESTING)
     add_executable(interface_headers_tests tests/InterfaceHeadersTests.cpp)
     target_link_libraries(interface_headers_tests PRIVATE minigit_paths)
     add_test(NAME interface_headers_tests COMMAND interface_headers_tests)
-
     add_executable(initialization_tests tests/InitializationTests.cpp)
     target_link_libraries(initialization_tests PRIVATE minigit_paths)
     add_test(NAME initialization_tests COMMAND initialization_tests)
+
+    add_test(NAME minigit_init_integration
+        COMMAND ${CMAKE_COMMAND}
+            "-DMINIGIT_EXECUTABLE=$<TARGET_FILE:minigit>"
+            "-DTEST_BASE=${CMAKE_CURRENT_BINARY_DIR}"
+            -P "${CMAKE_CURRENT_SOURCE_DIR}/tests/InitCliTest.cmake")
 endif()
