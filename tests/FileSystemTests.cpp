@@ -152,7 +152,6 @@ bool testWriteErrors() {
         const auto target = temp / "data.bin";
         const minigit::FileBytes binary = {0, 10, 13, 26, 128, 255};
 
-
         bool threw = false;
         try {
             fileSystem.writeBytesSafely(temp / "missing" / "data.bin", binary);
@@ -221,6 +220,63 @@ bool testFailedReplacement() {
     return passed;
 }
 
+bool testCopy() {
+    const minigit::FileSystem fileSystem;
+    const auto temp = std::filesystem::temp_directory_path() /
+        ("fs3-tests-" + std::to_string(
+            std::chrono::steady_clock::now().time_since_epoch().count()));
+    if (!std::filesystem::create_directory(temp)) {
+        throw std::runtime_error("Cannot create test directory");
+    }
+
+    bool passed = true;
+    try {
+        const auto source = temp / "source.bin";
+        const auto destination = temp / "copy.bin";
+        const minigit::FileBytes original = {0, 10, 13, 26, 127, 128, 255};
+        const minigit::FileBytes oldDestination = {'o', 'l', 'd'};
+
+        // Copy a regular file to a new destination path and verify exact content match.
+        fileSystem.writeBytesSafely(source, original);
+        fileSystem.copy(source, destination);
+        passed = check(fileSystem.readBytes(destination) == original, "copy preserves exact binary bytes") && passed;
+        passed = check(fileSystem.readBytes(source) == original, "copy leaves source unchanged") && passed;
+
+        // Overwrite an existing destination file and verify updated content.
+        fileSystem.writeBytesSafely(destination, oldDestination);
+        fileSystem.copy(source, destination);
+        passed = check(fileSystem.readBytes(destination) == original, "copy overwrites existing destination") && passed;
+        passed = check(fileSystem.readBytes(source) == original, "overwrite leaves source unchanged") && passed;
+
+        // Error case: source does not exist or is a directory.
+        for (const auto& invalidSource : {temp / "missing.bin", temp}) {
+            bool threw = false;
+            try {
+                fileSystem.copy(invalidSource, temp / "out.bin");
+            } catch (const std::runtime_error&) {
+                threw = true;
+            }
+            passed = check(threw, "missing source or directory throws") && passed;
+        }
+        passed = check(!std::filesystem::exists(temp / "out.bin"), "invalid source creates no destination") && passed;
+
+        // Error case: destination parent directory does not exist.
+        bool threw = false;
+        try {
+            fileSystem.copy(source, temp / "missing-dir" / "copy.bin");
+        } catch (const std::runtime_error&) {
+            threw = true;
+        }
+        passed = check(threw, "missing destination parent throws") && passed;
+        passed = check(!std::filesystem::exists(temp / "missing-dir"), "missing parent directory is not created") && passed;
+    } catch (...) {
+        std::filesystem::remove_all(temp);
+        throw;
+    }
+    std::filesystem::remove_all(temp);
+    return passed;
+}
+
 int main() {
     // Returning 1 tells CTest a test failed; returning 0 means all checks passed.
     if (!testReadBytes()) return 1;
@@ -228,6 +284,7 @@ int main() {
     if (!testWriteErrors()) return 1;
     if (!testFailedReplacement()) return 1;
     if (!testRemove()) return 1;
+    if (!testCopy()) return 1;
     std::cout << "FileSystem tests passed\n";
     return 0;
 }
