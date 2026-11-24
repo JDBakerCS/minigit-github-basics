@@ -209,6 +209,95 @@ void testSymbolicLinks() {
     }
 }
 
+// Fixtures use filesystem operations directly so validity tests do not
+// depend on the init command that will later create this layout.
+void createValidMetadata(const fs::path& root) {
+    fs::create_directories(root / ".minigit" / "stage");
+    fs::create_directories(root / ".minigit" / "commits");
+    std::ofstream(root / ".minigit" / "HEAD").close();
+    std::ofstream(root / ".minigit" / "index.txt").close();
+}
+
+void testUninitializedRepository() {
+    TemporaryProject project;
+    const minigit::RepositoryPaths paths(project.root);
+    if (paths.isInitialized() || fs::exists(paths.metadataRoot())) {
+        throw std::runtime_error("Validity check created or accepted missing metadata.");
+    }
+
+    std::ofstream(paths.metadataRoot()) << "keep";
+    if (paths.isInitialized() || fs::file_size(paths.metadataRoot()) != 4) {
+        throw std::runtime_error("Conflicting metadata file was accepted or changed.");
+    }
+}
+
+void testValidRepository() {
+    TemporaryProject project;
+    const minigit::RepositoryPaths paths(project.root);
+    createValidMetadata(project.root);
+    if (!paths.isInitialized()) {
+        throw std::runtime_error("Empty valid repository was rejected.");
+    }
+
+    // A repository stays valid after data has been added.
+    std::ofstream(paths.headFile()) << "1";
+    std::ofstream(paths.indexFile()) << "notes.txt";
+    std::ofstream(paths.stageFile("notes.txt")) << "ONE";
+    fs::create_directories(paths.commitDirectory("1") / "files");
+    std::ofstream(paths.committedFile("1", "notes.txt")) << "ONE";
+    std::ofstream(project.root / "notes.txt") << "TWO";
+    if (!paths.isInitialized()) {
+        throw std::runtime_error("Populated repository was rejected.");
+    }
+
+    const fs::path files[] = {paths.headFile(), paths.indexFile(),
+        paths.stageFile("notes.txt"), paths.committedFile("1", "notes.txt"),
+        project.root / "notes.txt"};
+    const std::string expected[] = {"1", "notes.txt", "ONE", "ONE", "TWO"};
+    for (int i = 0; i < 5; ++i) {
+        std::ifstream input(files[i]);
+        std::string actual;
+        std::getline(input, actual);
+        if (!input || actual != expected[i]) {
+            throw std::runtime_error("Validity check changed existing content.");
+        }
+    }
+}
+
+void testMissingRepositoryEntries() {
+    for (const auto* name : {"stage", "commits", "HEAD", "index.txt"}) {
+        TemporaryProject project;
+        createValidMetadata(project.root);
+        const minigit::RepositoryPaths paths(project.root);
+        const auto entry = paths.metadataRoot() / name;
+        fs::remove(entry);
+        if (paths.isInitialized() || fs::exists(entry)) {
+            throw std::runtime_error(std::string("Missing entry accepted or repaired: ") + name);
+        }
+    }
+}
+
+void testWrongRepositoryEntryTypes() {
+    for (const auto* name : {"stage", "commits", "HEAD", "index.txt"}) {
+        TemporaryProject project;
+        createValidMetadata(project.root);
+        const minigit::RepositoryPaths paths(project.root);
+        const auto entry = paths.metadataRoot() / name;
+        const bool wasDirectory = fs::is_directory(entry);
+        fs::remove(entry);
+        if (wasDirectory) {
+            std::ofstream(entry) << "keep";
+        } else {
+            fs::create_directory(entry);
+        }
+        if (paths.isInitialized() ||
+            fs::is_directory(entry) == wasDirectory ||
+            (wasDirectory && fs::file_size(entry) != 4)) {
+            throw std::runtime_error(std::string("Wrong entry type accepted or changed: ") + name);
+        }
+    }
+}
+
 void testPathHelpers() {
     const std::filesystem::path roots[] = {
         std::filesystem::path("course") / "repo",
@@ -286,6 +375,10 @@ void testPathHelpers() {
 
 int main() {
     try {
+        testUninitializedRepository();
+        testValidRepository();
+        testMissingRepositoryEntries();
+        testWrongRepositoryEntryTypes();
         testRoots();
         testPathHelpers();
         testRelativePaths();
