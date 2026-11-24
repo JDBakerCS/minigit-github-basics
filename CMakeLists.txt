@@ -16,6 +16,9 @@ add_library(minigit_paths
 
 target_include_directories(minigit_paths PUBLIC include)
 
+add_executable(minigit src/main.cpp)
+target_link_libraries(minigit PRIVATE minigit_paths)
+
 include(CTest)
 if(BUILD_TESTING)
     add_executable(path_lab_tests tests/PathLabTests.cpp)
@@ -36,10 +39,7 @@ if(BUILD_TESTING)
     add_executable(initialization_tests tests/InitializationTests.cpp)
     target_link_libraries(initialization_tests PRIVATE minigit_paths)
     add_test(NAME initialization_tests COMMAND initialization_tests)
-endif()
 
-# M2-4 adds the minigit target; this test starts running when it exists.
-if(BUILD_TESTING AND TARGET minigit)
     add_test(NAME minigit_init_integration
         COMMAND ${CMAKE_COMMAND}
             "-DMINIGIT_EXECUTABLE=$<TARGET_FILE:minigit>"
