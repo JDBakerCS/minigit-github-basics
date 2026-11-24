@@ -12,6 +12,9 @@ public:
     const std::filesystem::path& projectRoot() const;
     const std::filesystem::path& metadataRoot() const;
 
+    // M2: Check required metadata entries without changing them.
+    bool isInitialized() const;
+
     std::string safeRelativeFile(const std::string& argument) const;
 
     std::filesystem::path headFile() const;

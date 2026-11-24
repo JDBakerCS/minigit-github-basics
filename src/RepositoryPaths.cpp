@@ -17,6 +17,16 @@ const std::filesystem::path& RepositoryPaths::metadataRoot() const {
     return metadataRoot_;
 }
 
+bool RepositoryPaths::isInitialized() const {
+    // Missing or incorrectly typed entries are invalid. Filesystem
+    // inspection errors propagate to the caller instead of hiding them.
+    return std::filesystem::is_directory(metadataRoot_) &&
+           std::filesystem::is_directory(metadataRoot_ / "stage") &&
+           std::filesystem::is_directory(metadataRoot_ / "commits") &&
+           std::filesystem::is_regular_file(headFile()) &&
+           std::filesystem::is_regular_file(indexFile());
+}
+
 std::string RepositoryPaths::safeRelativeFile(
     const std::string& argument) const {
 
