@@ -86,6 +86,12 @@ void FileSystem::writeBytesSafely(const std::filesystem::path& target,
     std::filesystem::remove(workspace, ignored);
 }
 
+void FileSystem::copy(const std::filesystem::path& source,
+                      const std::filesystem::path& destination) const {
+    const FileBytes bytes = readBytes(source);
+    writeBytesSafely(destination, bytes);
+}
+
 void FileSystem::remove(const std::filesystem::path& file) const {
     // Only deletes a real file, never a folder or a missing path.
     if (!std::filesystem::is_regular_file(file)) {
@@ -93,7 +99,8 @@ void FileSystem::remove(const std::filesystem::path& file) const {
     }
     std::filesystem::remove(file);
 }
-    
+
+
 void FileSystem::createDirectories(const std::filesystem::path& directory) const {
     if (std::filesystem::is_directory(directory)) {
         return;
@@ -104,4 +111,4 @@ void FileSystem::createDirectories(const std::filesystem::path& directory) const
         throw std::runtime_error("Cannot create directory: " + directory.string());
     }
 }
-}
+} // namespace minigit

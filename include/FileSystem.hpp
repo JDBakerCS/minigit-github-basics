@@ -12,9 +12,10 @@ public:
     FileBytes readBytes(const std::filesystem::path& file) const;
     void writeBytesSafely(const std::filesystem::path& target,
                           const FileBytes& bytes) const;
+    void copy(const std::filesystem::path& source,
+              const std::filesystem::path& destination) const;
     void remove(const std::filesystem::path& file) const;
     void createDirectories(const std::filesystem::path& directory) const;
 };
-}
 
-
+} // namespace minigit
