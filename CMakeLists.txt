@@ -16,6 +16,9 @@ add_library(minigit_paths
 
 target_include_directories(minigit_paths PUBLIC include)
 
+add_executable(minigit src/main.cpp)
+target_link_libraries(minigit PRIVATE minigit_paths)
+
 include(CTest)
 if(BUILD_TESTING)
     add_executable(path_lab_tests tests/PathLabTests.cpp)
