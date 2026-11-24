@@ -100,4 +100,15 @@ void FileSystem::remove(const std::filesystem::path& file) const {
     std::filesystem::remove(file);
 }
 
+
+void FileSystem::createDirectories(const std::filesystem::path& directory) const {
+    if (std::filesystem::is_directory(directory)) {
+        return;
+    }
+    std::error_code error;
+    std::filesystem::create_directories(directory, error);
+    if (error || !std::filesystem::is_directory(directory)) {
+        throw std::runtime_error("Cannot create directory: " + directory.string());
+    }
 }
+} // namespace minigit

@@ -15,6 +15,7 @@ public:
     void copy(const std::filesystem::path& source,
               const std::filesystem::path& destination) const;
     void remove(const std::filesystem::path& file) const;
+    void createDirectories(const std::filesystem::path& directory) const;
 };
 
-}
+} // namespace minigit

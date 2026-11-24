@@ -277,6 +277,59 @@ bool testCopy() {
     return passed;
 }
 
+// Check creating nested folders, an existing folder, and files in the way.
+bool testCreateDirectories() {
+    const minigit::FileSystem fileSystem;
+    const auto temp = std::filesystem::temp_directory_path() / "m2-2-tests";
+    std::filesystem::remove_all(temp);
+    std::filesystem::create_directories(temp);
+
+    bool passed = true;
+
+    // Creates a folder and its missing parent.
+    fileSystem.createDirectories(temp / "a" / "b");
+    passed = check(std::filesystem::is_directory(temp / "a"), "parent folder is created") && passed;
+    passed = check(std::filesystem::is_directory(temp / "a" / "b"), "folder is created") && passed;
+
+    // Calling it again on an existing folder does nothing.
+    bool threw = false;
+    try {
+        fileSystem.createDirectories(temp / "a" / "b");
+    } catch (const std::runtime_error&) {
+        threw = true;
+    }
+    passed = check(!threw, "existing folder does not throw") && passed;
+
+    // Error case: a regular file at the target path throws and stays unchanged.
+    std::ofstream(temp / "file.txt") << "keep";
+    threw = false;
+    try {
+        fileSystem.createDirectories(temp / "file.txt");
+    } catch (const std::runtime_error&) {
+        threw = true;
+    }
+    passed = check(threw, "file at the target throws") && passed;
+    passed = check(std::filesystem::is_regular_file(temp / "file.txt"), "target file is still a file") && passed;
+    passed = check(fileSystem.readBytes(temp / "file.txt") == minigit::FileBytes{'k', 'e', 'e', 'p'},
+                   "target file is unchanged") && passed;
+
+    // Error case: a regular file blocking a parent folder throws and stays unchanged.
+    std::ofstream(temp / "blocked") << "keep";
+    threw = false;
+    try {
+        fileSystem.createDirectories(temp / "blocked" / "b");
+    } catch (const std::runtime_error&) {
+        threw = true;
+    }
+    passed = check(threw, "file in the parent path throws") && passed;
+    passed = check(std::filesystem::is_regular_file(temp / "blocked"), "blocking file is still a file") && passed;
+    passed = check(fileSystem.readBytes(temp / "blocked") == minigit::FileBytes{'k', 'e', 'e', 'p'},
+                   "blocking file is unchanged") && passed;
+
+    std::filesystem::remove_all(temp);
+    return passed;
+}
+
 int main() {
     // Returning 1 tells CTest a test failed; returning 0 means all checks passed.
     if (!testReadBytes()) return 1;
@@ -285,6 +338,7 @@ int main() {
     if (!testFailedReplacement()) return 1;
     if (!testRemove()) return 1;
     if (!testCopy()) return 1;
+    if (!testCreateDirectories()) return 1;
     std::cout << "FileSystem tests passed\n";
     return 0;
 }
