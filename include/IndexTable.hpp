@@ -8,21 +8,22 @@
 
 namespace minigit {
 
-
+// Reads, updates, and clears the selected paths (index.txt) and their Stage copies.
 class IndexTable {
 public:
-    IndexTable(const RepositoryPaths& paths, FileSystem& fileSystem);
+    // Only stores locations and the file system; reads nothing.
+    IndexTable(const RepositoryPaths& paths, FileSystem& fileSystem);  // M2
 
-    std::vector<std::string> loadPaths() const;                   
-    bool contains(const std::string& relativePath) const;         
-    void savePaths(const std::vector<std::string>& entries);      
-    Snapshot loadSelections() const;                             
-    void clearSelections();                                       
+    std::vector<std::string> loadPaths() const;                   // M3
+    bool contains(const std::string& relativePath) const;         // M3
+    void savePaths(const std::vector<std::string>& entries);      // M3
+    Snapshot loadSelections() const;                              // M3
+    void clearSelections();                                       // M4
 
 private:
-    std::filesystem::path indexFile_;   
-    std::filesystem::path stageRoot_;   
-    FileSystem& fileSystem_;           
+    std::filesystem::path indexFile_;   // .minigit/index.txt
+    std::filesystem::path stageRoot_;   // .minigit/stage
+    FileSystem& fileSystem_;            // file access
 };
 
 }
